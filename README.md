@@ -1,2 +1,2 @@
 # Generic-List
-Generic list library in C
+Generic linked list library in C
