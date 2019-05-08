@@ -12,8 +12,8 @@
  */
 
 #include "list.h"
-#include <stdbool.h>
-
+#include <stdlib.h>
+#include <string.h>
 
 /*
  * Returns a duplicate of list.
@@ -252,21 +252,21 @@ void list_remove_last(List* list)
  * Removes from the list the element equals to the passed element. The way it will compare the elements is obteined by compare param.
  * Compare is according to the standard compare functions. compare(a,b) --> Negative:a<b, Zero:a=b, Positive: a>b
  * If compare param not passed (NULL) it will use default_compare.
- * OUTPUT: TRUE if removed, FALSE if not.
+ * OUTPUT: true if removed, false if not.
  */
 bool list_remove_data(List* list, void* data_to_search, size_t data_to_search_size, int (*compare)(void*,size_t,void*,size_t))
 {
 	int index;
-	if (list == NULL) return FALSE;
+	if (list == NULL) return false;
 	index = list_find(*list, data_to_search, data_to_search_size, compare);
 	if (index < 0)
 	{
-		return FALSE;
+		return false;
 	}
 	else
 	{
 		list_remove_index(list, index);
-		return TRUE;
+		return true;
 	}
 }
 
