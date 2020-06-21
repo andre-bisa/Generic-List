@@ -51,7 +51,6 @@ void list_destroy(List* list)
  */
 void list_insert_index(List* list, void* data, size_t data_size, int index)
 {
-	List current = *list;
 	Node* new_node;
 	if (index <= 0) return;
 	if (list == NULL) return;
@@ -65,6 +64,7 @@ void list_insert_index(List* list, void* data, size_t data_size, int index)
 	}
 	else
 	{ // list is not empty
+		List current = *list;
 		while ((index - 1) > 1 && current->next != empty_list) // will stop in the previous position of the insertion
 		{
 			current = current->next;
@@ -175,12 +175,12 @@ int list_length(List list)
  */
 void* list_remove_index_get_pointer(List* list, int index, size_t* data_size)
 {
-	List current = *list;
 	List previous = NULL;
 	void* temp;
 	if (list == NULL) return NULL;
 	if (*list == empty_list) return NULL;
 	if (index <= 0) return NULL;
+	List current = *list;
 	while (index > 1 && current->next != empty_list)
 	{
 		previous = current;
