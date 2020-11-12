@@ -1,6 +1,6 @@
 /********************************************************
  **  Authors: Andrea Bisacchi, andrea.bisacchi5@studio.unibo.it
- **           Carlo Caini (DTNperf_3 project supervisor), carlo.caini@unibo.it
+ **           Carlo Caini, carlo.caini@unibo.it
  **
  **
  **  Copyright (c) 2013, Alma Mater Studiorum, University of Bologna
@@ -40,24 +40,34 @@ List list_duplicate(List list);
 void list_destroy(List* list);
 
 /*
- * Inserts in the list a COPY of the element passed in the position index
+ * Inserts in the list a COPY of the element passed in the position index.
+ * Returns the pointer to the new data allocated
  */
-void list_insert_index(List* list, void* data, size_t data_size, int index);
+void* list_insert_index(List* list, void* data, size_t data_size, int index);
 
 /*
  * Inserts in the list a COPY of the element passed.
+ * Returns the pointer to the new data allocated
  */
-void list_push_front(List* list, void* data, size_t data_size);
+void* list_push_front(List* list, void* data, size_t data_size);
+
+/*
+ * Inserts in the list a COPY of the element passed. The element will be added in ordered way according to compare function.
+ * Returns the pointer to the new data allocated
+ */
+void* list_push_ordered(List *list, void* data, size_t data_size, int (*compare)(void*,size_t,void*,size_t));
 
 /*
  * Inserts in the end of the list a COPY of the element passed.
+ * Returns the pointer to the new data allocated
  */
-void list_push_back(List* list, void* data, size_t data_size);
+void* list_push_back(List* list, void* data, size_t data_size);
 
 /*
  * Inserts in the end of the list a COPY of the element passed.
+ * Returns the pointer to the new data allocated
  */
-void list_append(List* list, void* data, size_t data_size);
+void* list_append(List* list, void* data, size_t data_size);
 
 /*
  * Returns a COPY of the element in position index according to list_length value.
@@ -115,6 +125,18 @@ void list_remove_last(List* list);
  * OUTPUT: TRUE if removed, FALSE if not.
  */
 bool list_remove_data(List* list, void* data_to_search, size_t data_to_search_size, int (*compare)(void*,size_t,void*,size_t));
+
+/*
+ * Removes from the list the elements which the function isToRemove is true is obteined by compare param.
+ * OUTPUT: TRUE if removed at least one element, FALSE if not.
+ */
+bool list_remove_if(List* list, bool (*isToRemove)(void*,size_t));
+
+/*
+ * Executes the function (param function) for each list element.
+ * DO NOT FREE the pointer passed to your function.
+ */
+void list_for_each(List list, void (*function)(void*,size_t));
 
 /*
  * Returns the index of the element passed. The way it will compare the elements is obteined by compare param.

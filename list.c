@@ -1,6 +1,6 @@
 /********************************************************
  **  Authors: Andrea Bisacchi, andrea.bisacchi5@studio.unibo.it
- **           Carlo Caini (DTNperf_3 project supervisor), carlo.caini@unibo.it
+ **           Carlo Caini, carlo.caini@unibo.it
  **
  **
  **  Copyright (c) 2013, Alma Mater Studiorum, University of Bologna
@@ -47,73 +47,101 @@ void list_destroy(List* list)
 }
 
 /*
- * Inserts in the list a COPY of the element passed in the position index
+ * Inserts in the list a COPY of the element passed in the position index.
+ * Returns the pointer to the new data allocated
  */
-void list_insert_index(List* list, void* data, size_t data_size, int index)
+void* list_insert_index(List* list, void* data, size_t data_size, int index)
 {
 	Node* new_node;
-	if (index <= 0) return;
-	if (list == NULL) return;
-	if (data == NULL) return;
-	if (*list == empty_list)
-	{ // list is empty
-		if (index != 1) return; // must create first element
-		*list = (Node*) malloc(sizeof(Node));
-		new_node = *list; // set the new Node
-		new_node->next = NULL;
+	if (index <= 0) return NULL;
+	if (list == NULL) return NULL;
+	if (data == NULL) return NULL;
+	if (*list == empty_list && index != 1) return NULL;
+
+	if (index == 1)
+	{ // have to insert in front
+		new_node = (Node*) malloc(sizeof(Node));
+		new_node->next = *list;
+		*list = new_node;
 	}
 	else
-	{ // list is not empty
+	{ // have to insert in the middle (or in the end)
 		List current = *list;
-		while ((index - 1) > 1 && current->next != empty_list) // will stop in the previous position of the insertion
+		while (index > 2 && current->next != empty_list) // will stop in the previous position of the insertion
 		{
 			current = current->next;
 			index--;
 		}
-		switch (index)
-		{
-		case 1: // have to insert the first element
-			new_node = (Node*) malloc(sizeof(Node));
-			new_node->next = current;
-			*list = new_node;
-			break;
-		case 2: // have to insert in the middle
+		if (index == 2)
+		{ // insert in the middle (or in the end)
 			new_node = (Node*) malloc(sizeof(Node));
 			new_node->next = current->next;
 			current->next = new_node;
-			break;
-		default: // list is not long enough
-			return;
+		}
+		else
+		{ // list is not long enough
+			return NULL;
 		}
 	}
 	new_node->data_size = data_size;
 	new_node->data = malloc(data_size);
 	memcpy(new_node->data, data, data_size); //copy the data
+
+	return new_node->data;
 }
 
 /*
  * Inserts in the list a COPY of the element passed.
+ * Returns the pointer to the new data allocated
  */
-void list_push_front(List* list, void* data, size_t data_size)
+inline void* list_push_front(List* list, void* data, size_t data_size)
 {
-	list_insert_index(list, data, data_size, 1);
+	return list_insert_index(list, data, data_size, 1);
+}
+
+/*
+ * Inserts in the list a COPY of the element passed. The element will be added in ordered way according to compare function.
+ * Returns the pointer to the new data allocated
+ */
+void* list_push_ordered(List *list, void* data, size_t data_size, int (*compare)(void*,size_t,void*,size_t))
+{
+	int index = 1;
+	List cursor;
+
+	if (compare == NULL) compare = &default_compare;
+	if (list == NULL) return NULL;
+	cursor = *list;
+
+	if (*list == empty_list) // List is empty -> need to create an element
+	{
+		return list_push_front(list, data, data_size);
+	}
+
+	while ( cursor != empty_list && compare(data, data_size, cursor->data, cursor->data_size) > 0 )
+	{
+		index++;
+		cursor = cursor->next;
+	}
+
+	return list_insert_index(list, data, data_size, index);
 }
 
 /*
  * Inserts in the end of the list a COPY of the element passed.
+ * Returns the pointer to the new data allocated
  */
-void list_push_back(List* list, void* data, size_t data_size)
+inline void* list_push_back(List* list, void* data, size_t data_size)
 {
-	if (list == NULL) return;
-	list_insert_index(list, data, data_size, list_length(*list) + 1);
+	return (list == NULL ? NULL : list_insert_index(list, data, data_size, list_length(*list) + 1));
 }
 
 /*
  * Inserts in the end of the list a COPY of the element passed.
+ * Returns the pointer to the new data allocated
  */
-void list_append(List* list, void* data, size_t data_size)
+inline void* list_append(List* list, void* data, size_t data_size)
 {
-	list_push_back(list, data, data_size);
+	return list_push_back(list, data, data_size);
 }
 
 /*
@@ -175,12 +203,13 @@ int list_length(List list)
  */
 void* list_remove_index_get_pointer(List* list, int index, size_t* data_size)
 {
+	List current;
 	List previous = NULL;
 	void* temp;
 	if (list == NULL) return NULL;
 	if (*list == empty_list) return NULL;
 	if (index <= 0) return NULL;
-	List current = *list;
+	current = *list;
 	while (index > 1 && current->next != empty_list)
 	{
 		previous = current;
@@ -207,7 +236,7 @@ void* list_remove_index_get_pointer(List* list, int index, size_t* data_size)
  * Removes and returns the pointer and the data_size of the first element.
  * You should FREE the resource!
  */
-void* list_pop_front(List* list, size_t* data_size)
+inline void* list_pop_front(List* list, size_t* data_size)
 {
 	return list_remove_index_get_pointer(list, 1, data_size);
 }
@@ -216,10 +245,9 @@ void* list_pop_front(List* list, size_t* data_size)
  * Removes and returns the pointer and the data_size of the last element.
  * You should FREE the resource!
  */
-void* list_pop_back(List* list, size_t* data_size)
+inline void* list_pop_back(List* list, size_t* data_size)
 {
-	if (list == NULL) return NULL;
-	return list_remove_index_get_pointer(list, list_length(*list), data_size);
+	return (list == NULL ? NULL : list_remove_index_get_pointer(list, list_length(*list), data_size));
 }
 
 /*
@@ -235,7 +263,7 @@ void list_remove_index(List* list, int index)
 /*
  * Removes from the list the first element.
  */
-void list_remove_first(List* list)
+inline void list_remove_first(List* list)
 {
 	list_remove_index(list, 1);
 }
@@ -243,7 +271,7 @@ void list_remove_first(List* list)
 /*
  * Removes from the list the last element.
  */
-void list_remove_last(List* list)
+inline void list_remove_last(List* list)
 {
 	list_remove_index(list, list_length(*list));
 }
@@ -259,7 +287,7 @@ bool list_remove_data(List* list, void* data_to_search, size_t data_to_search_si
 	int index;
 	if (list == NULL) return false;
 	index = list_find(*list, data_to_search, data_to_search_size, compare);
-	if (index < 0)
+	if (index <= 0)
 	{
 		return false;
 	}
@@ -267,6 +295,48 @@ bool list_remove_data(List* list, void* data_to_search, size_t data_to_search_si
 	{
 		list_remove_index(list, index);
 		return true;
+	}
+}
+
+/*
+ * Removes from the list the elements which the function isToRemove is true is obteined by compare param.
+ * OUTPUT: TRUE if removed at least one element, FALSE if not.
+ */
+bool list_remove_if(List* list, bool (*isToRemove)(void*,size_t)) {
+	bool result = false;
+	List current;
+	List next;
+	int indexToRemove;
+
+	if (list == NULL) return false;
+	if (*list == empty_list) return false;
+
+	current = *list;
+	indexToRemove = 1;
+
+	while (current != empty_list) {
+		next = current->next;
+		if (isToRemove(current->data, current->data_size)) { // Remove
+			list_remove_index(list, indexToRemove);
+			result = true;
+		} else {
+			indexToRemove++;
+		}
+		current = next;
+	}
+
+	return result;
+}
+
+/*
+ * Executes the function (param function) for each list element.
+ * DO NOT FREE the pointer passed to your function.
+ */
+void list_for_each(List list, void (*function)(void*,size_t)) {
+	if (function == NULL) return;
+	for (; list != empty_list; list = list->next)
+	{
+		function(list->data, list->data_size);
 	}
 }
 
@@ -351,6 +421,7 @@ int default_compare(void* data1, size_t data1_size, void* data2, size_t data2_si
 {
 	if (data1 == NULL) return -1;
 	if (data2 == NULL) return 1;
+	if (data1==data2 && data1_size==data2_size) return 0;
 	return (data1_size != data2_size) ? (data1_size - data2_size) : memcmp(data1, data2, data1_size);
 }
 
