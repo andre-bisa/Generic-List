@@ -11,8 +11,8 @@
  * list.h
  */
 
-#ifndef DTNPERF_SRC_AL_BP_UTILITY_LIST_H_
-#define DTNPERF_SRC_AL_BP_UTILITY_LIST_H_
+#ifndef LIST_H_
+#define LIST_H_
 
 #include <stdbool.h>
 #include <stddef.h>
